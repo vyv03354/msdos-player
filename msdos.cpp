@@ -10524,6 +10524,8 @@ void finish_service_loop()
 			CPU_SET_S_FLAG(1);
 		}
 		in_service = false;
+	} else {
+		InputSleep(10);
 	}
 }
 
