@@ -15301,20 +15301,12 @@ inline void msdos_int_21h_3ah(int lfn)
 inline void msdos_int_21h_3bh(int lfn)
 {
 	const char *path = msdos_trimmed_path((char *)(mem + CPU_DS_BASE + CPU_DX), lfn, 1);
-	
-	if(my_chdir(path)) {
+	DWORD attr;
+	if (((attr = MyGetFileAttributesA(path)) == INVALID_FILE_ATTRIBUTES) || !(attr & FILE_ATTRIBUTE_DIRECTORY)) {
 		CPU_AX = 3;	// must be 3 (path not found)
 		CPU_SET_C_FLAG(1);
 	} else {
-		int drv = _getdrive() - 1;
-		path = MyGetVolumePathNameA(path);
-		if(strlen(path) >= 2 && path[1] == ':') {
-			if(path[0] >= 'A' && path[0] <= 'Z') {
-				drv = path[0] - 'A';
-			} else if(path[0] >= 'a' && path[0] <= 'z') {
-				drv = path[0] - 'a';
-			}
-		}
+		int drv = msdos_drive_number(path);
 		cds_t *cds = (cds_t *)(mem + CDS_TOP + sizeof(cds_t) * drv);
 		char cur_path[MAX_PATH];
 		if(my_getdcwd(drv + 1, cur_path, MAX_PATH) != NULL) {
@@ -15322,6 +15314,7 @@ inline void msdos_int_21h_3bh(int lfn)
 		} else {
 			sprintf(cds->path_name, "%c:\\", 'A' + drv);
 		}
+		if(drv == (_getdrive() - 1)) my_chdir(path);
 		CPU_AX = 0x00; // AX isdestroyed
 	}
 }
