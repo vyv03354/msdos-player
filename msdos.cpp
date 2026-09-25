@@ -16724,7 +16724,8 @@ inline void msdos_int_21h_4eh()
 		dtainfo->allowable_mask &= ~8;
 		CPU_AX = 0;
 	} else {
-		CPU_AX = msdos_error_code(GetLastError());
+		DWORD error = GetLastError();
+		CPU_AX = error == ERROR_FILE_NOT_FOUND ? ERROR_NO_MORE_FILES : msdos_error_code(error);
 		CPU_SET_C_FLAG(1);
 	}
 }
